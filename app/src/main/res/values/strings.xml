@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">VeoNavigation</string>
     <string name="title_activity_maps">MapsActivity</string>
+    <string name="start_navigation">Start</string>
+    <string name="stop_navigation">Stop</string>
+    <string name="finish">Finish</string>
+    <string name="select_tip">Please click on the map to select a destination</string>
 </resources>

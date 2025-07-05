@@ -1,4 +1,4 @@
-package com.pks.veo.ui1
+package com.pks.veo.manager
 
 import android.app.Activity
 import android.location.Location
@@ -91,16 +91,27 @@ class NavigationManager(
         }
     }
 
-    fun stopNavigation() {
-        navigator?.let {
+    fun isGuidanceRunning():Boolean{
+       return navigator?.isGuidanceRunning?:false
+    }
 
-            handleNavigationData()
+    fun stopNavigation() {
+        handleNavigationData()
+        navigator?.let {
             it.stopGuidance()
             it.clearDestinations()
             it.unregisterServiceForNavUpdates()
+            // 添加以下清理操作
+            it.removeArrivalListener { }
+            it.setAudioGuidance(Navigator.AudioGuidance.SILENT)
         }
+
         roadSnappedLocationProvider?.resetFreeNav()
         listener.onNavigationStopped()
+        navigator = null
+        roadSnappedLocationProvider = null
+        navigationStartTime = null
+
     }
 
 
@@ -132,11 +143,11 @@ class NavigationManager(
             )
             totalDistance += results[0]
         }
-        return totalDistance // 返回以米为单位的距离
+        return totalDistance
     }
 
     private fun handleNavigationError(errorCode: Int) {
-        // Handle navigation errors
+
     }
 
     fun cleanup() {
@@ -158,7 +169,7 @@ class NavigationData {
     var path: List<LatLng>? = null
 
     fun totalTime(): String? {
-        if(startTime==null||endTime==null){
+        if (startTime == null || endTime == null) {
             return null
         }
         val totalSeconds = (endTime!! - startTime!!) / 1000

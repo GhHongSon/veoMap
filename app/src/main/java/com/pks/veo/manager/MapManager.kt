@@ -1,13 +1,9 @@
-package com.pks.veo.ui1
+package com.pks.veo.manager
 
-import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
 import android.graphics.Color
-import android.util.Log
-import android.view.ViewGroup
-import androidx.core.app.ActivityCompat
 import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
@@ -16,12 +12,19 @@ import com.google.android.gms.maps.model.RoundCap
 import com.google.android.libraries.navigation.SupportNavigationFragment
 import com.pks.veo.R
 
+
+interface MapClickListener {
+    fun onMapClick(latLng: LatLng)
+}
+
+
 class MapManager(
     private val context: Context,
-    private val container: ViewGroup
+    private val mapClickListener: MapClickListener
 ) {
     private val navFragment = SupportNavigationFragment.newInstance()
     var mDestinationLatLng: LatLng? = null
+    var mGoogleMap: GoogleMap? = null
 
     init {
         setupMapFragment()
@@ -35,19 +38,26 @@ class MapManager(
 
 
         navFragment.getMapAsync { googleMap ->
+            mGoogleMap = googleMap
             if (PermissionManager(context).checkLocationPermission()) {
                 googleMap.isMyLocationEnabled = true
             }
 
             googleMap.setOnMapClickListener { latLng ->
                 mDestinationLatLng = latLng
-                googleMap.clear()
-                googleMap.addMarker(
-                    MarkerOptions()
-                        .position(latLng)
-                        .title("Marker")
-                )
+                mapClickListener.onMapClick(latLng)
             }
+        }
+    }
+
+    fun addDestinationMark() {
+        mDestinationLatLng?.let {
+            mGoogleMap?.clear()
+            mGoogleMap?.addMarker(
+                MarkerOptions()
+                    .position(it)
+                    .title("目的地")
+            )
         }
     }
 
@@ -70,5 +80,18 @@ class MapManager(
         navFragment.getMapAsync { map ->
             map?.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoom))
         }
+    }
+
+    fun clearMap() {
+        mGoogleMap?.run {
+            uiSettings.isZoomControlsEnabled = true
+            uiSettings.isMyLocationButtonEnabled = true
+            clear()
+        }
+
+    }
+
+    fun setNavigationUiEnabled(enabled: Boolean) {
+        navFragment.isNavigationUiEnabled = false
     }
 }
