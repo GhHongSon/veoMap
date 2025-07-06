@@ -7,7 +7,7 @@ import androidx.core.content.ContextCompat
 import android.Manifest
 
 class PermissionManager(private val activity: Activity) {
-    var onRequestPermissionsResult: ((granted:Boolean) -> Unit)? = null
+  private  var requestPermissionsResultListener: ((granted:Boolean) -> Unit)? = null
 
     companion object {
         private const val PERMISSION_REQUEST_CODE = 1
@@ -17,8 +17,8 @@ class PermissionManager(private val activity: Activity) {
         )
     }
 
-    fun checkLocationPermission(result: ((granted:Boolean) -> Unit)? = null): Boolean {
-        onRequestPermissionsResult=result
+    fun checkLocationPermission(resultListener: ((granted:Boolean) -> Unit)? = null): Boolean {
+        requestPermissionsResultListener=resultListener
         val allGranted = REQUIRED_PERMISSIONS.all {
             ContextCompat.checkSelfPermission(activity, it) == PackageManager.PERMISSION_GRANTED
         }
@@ -29,7 +29,7 @@ class PermissionManager(private val activity: Activity) {
                 PERMISSION_REQUEST_CODE
             )
         }else{
-            onRequestPermissionsResult?.invoke(true)
+            requestPermissionsResultListener?.invoke(true)
         }
         return allGranted
     }
@@ -42,7 +42,7 @@ class PermissionManager(private val activity: Activity) {
         if (requestCode == PERMISSION_REQUEST_CODE) {
             val granted = grantResults.isNotEmpty() &&
                     grantResults.all { it == PackageManager.PERMISSION_GRANTED }
-            onRequestPermissionsResult?.invoke(granted)
+            requestPermissionsResultListener?.invoke(granted)
         }
 
     }

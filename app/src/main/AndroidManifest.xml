@@ -5,10 +5,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> <!-- 基础位置权限 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" /> <!-- Android 9- 的前台服务权限 -->
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 
     <application
@@ -24,7 +23,7 @@
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="APP_KEY" />
+            android:value="AIzaSyAnThp0UKkwsGnQ1EMHzwfamNmX4KAemrA" />
 
         <activity
             android:name=".activity.MapsActivity"
@@ -34,8 +33,6 @@
 
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

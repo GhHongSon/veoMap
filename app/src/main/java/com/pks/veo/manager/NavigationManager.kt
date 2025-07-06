@@ -24,6 +24,7 @@ class NavigationManager(
     private var roadSnappedLocationProvider: RoadSnappedLocationProvider? = null
     var navigationData: NavigationData? = null
     var navigationStartTime: Long? = null
+
     fun startNavigation(destinationLatLng: LatLng) {
         NavigationApi.getNavigator(context, object : NavigationApi.NavigatorListener {
             override fun onNavigatorReady(navigator: Navigator?) {
@@ -43,12 +44,10 @@ class NavigationManager(
             val routingOptions = RoutingOptions().apply {
                 travelMode(RoutingOptions.TravelMode.DRIVING)
             }
-
             roadSnappedLocationProvider =
                 NavigationApi.getRoadSnappedLocationProvider(context.application)
-
-            nav.addArrivalListener { arrivalEvent ->
-                // Handle arrival events
+            nav.addArrivalListener { _ ->
+                stopNavigation()
             }
             val destination: Waypoint = createWaypoint(destinationLatLng)
             navigateToPlace(destination, routingOptions)
@@ -63,23 +62,12 @@ class NavigationManager(
 
     private fun navigateToPlace(destination: Waypoint, travelMode: RoutingOptions) {
         val pendingRoute =
-            navigator!!.setDestination(destination, travelMode)
-
-
-        // Define the action to perform when the SDK has determined the route.
-        pendingRoute.setOnResultListener { code ->
+            navigator?.setDestination(destination, travelMode)
+        pendingRoute?.setOnResultListener { code ->
             when (code) {
                 Navigator.RouteStatus.OK -> {
-                    // Hide the toolbar to maximize the navigation UI.
-//                    if (actionBar != null) {
-//                        actionBar!!.hide()
-//                    }
-
-                    // Enable voice audio guidance (through the device speaker).
-                    navigator!!.setAudioGuidance(Navigator.AudioGuidance.VOICE_ALERTS_AND_GUIDANCE)
-//                    mNavigator!!.setAudioGuidance(Navigator.AudioGuidance.SILENT)
-                    // Start turn-by-turn guidance along the current route.
-                    navigator!!.startGuidance()
+                    navigator?.setAudioGuidance(Navigator.AudioGuidance.VOICE_ALERTS_AND_GUIDANCE)
+                    navigator?.startGuidance()
                     navigationStartTime = System.currentTimeMillis()
                 }
 
@@ -91,19 +79,18 @@ class NavigationManager(
         }
     }
 
-    fun isGuidanceRunning():Boolean{
-       return navigator?.isGuidanceRunning?:false
+    fun isGuidanceRunning(): Boolean {
+        return navigator?.isGuidanceRunning ?: false
     }
 
     fun stopNavigation() {
         handleNavigationData()
-        navigator?.let {
-            it.stopGuidance()
-            it.clearDestinations()
-            it.unregisterServiceForNavUpdates()
-            // 添加以下清理操作
-            it.removeArrivalListener { }
-            it.setAudioGuidance(Navigator.AudioGuidance.SILENT)
+        navigator?.apply {
+            stopGuidance()
+            clearDestinations()
+            unregisterServiceForNavUpdates()
+            removeArrivalListener { }
+            setAudioGuidance(Navigator.AudioGuidance.SILENT)
         }
 
         roadSnappedLocationProvider?.resetFreeNav()
@@ -127,14 +114,11 @@ class NavigationManager(
     }
 
     private fun calculateDistance(path: List<LatLng>): Float {
-
         if (path.size < 2) return 0f
-
         var totalDistance = 0f
         for (i in 0 until path.size - 1) {
             val point1 = path[i]
             val point2 = path[i + 1]
-
             val results = FloatArray(1)
             Location.distanceBetween(
                 point1.latitude, point1.longitude,

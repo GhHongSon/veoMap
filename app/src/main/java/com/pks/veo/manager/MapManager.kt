@@ -1,11 +1,17 @@
 package com.pks.veo.manager
 
+import android.R.attr.padding
+import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.graphics.Color
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.JointType
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
+import com.google.android.gms.maps.model.Marker
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.maps.model.RoundCap
@@ -23,8 +29,9 @@ class MapManager(
     private val mapClickListener: MapClickListener
 ) {
     private val navFragment = SupportNavigationFragment.newInstance()
-    var mDestinationLatLng: LatLng? = null
-    var mGoogleMap: GoogleMap? = null
+    var destinationLatLng: LatLng? = null
+    var destinationMarker: Marker? = null
+    var googleMap: GoogleMap? = null
 
     init {
         setupMapFragment()
@@ -37,43 +44,69 @@ class MapManager(
             .commit()
 
 
-        navFragment.getMapAsync { googleMap ->
-            mGoogleMap = googleMap
+        navFragment.getMapAsync { map ->
+            this.googleMap = map
             if (PermissionManager(context).checkLocationPermission()) {
-                googleMap.isMyLocationEnabled = true
+                setMyLocationEnabled(true)
             }
 
-            googleMap.setOnMapClickListener { latLng ->
-                mDestinationLatLng = latLng
+            map.setOnMapClickListener { latLng ->
+                destinationLatLng = latLng
                 mapClickListener.onMapClick(latLng)
             }
         }
     }
 
+    @SuppressLint("MissingPermission")
+    fun setMyLocationEnabled(enabled: Boolean) {
+        googleMap?.isMyLocationEnabled = enabled
+    }
+
     fun addDestinationMark() {
-        mDestinationLatLng?.let {
-            mGoogleMap?.clear()
-            mGoogleMap?.addMarker(
+        destinationLatLng?.let {
+            destinationMarker?.remove()
+            destinationMarker = googleMap?.addMarker(
                 MarkerOptions()
                     .position(it)
-                    .title("目的地")
+                    .title("Destination")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
         }
     }
 
     fun drawTrajectory(locations: List<LatLng>) {
-        val polylineOptions = PolylineOptions().apply {
-            color(Color.BLUE)
-            width(20f)
-            startCap(RoundCap())
-            endCap(RoundCap())
-            jointType(JointType.ROUND)
-            addAll(locations)
+        destinationMarker?.remove()
+        googleMap?.let { map ->
+            locations.firstOrNull()?.let {
+                map.addMarker(
+                    MarkerOptions()
+                        .position(LatLng(it.latitude, it.longitude))
+                        .title("Start")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                )
+            }
+            locations.lastOrNull()?.let {
+                map.addMarker(
+                    MarkerOptions()
+                        .position(LatLng(it.latitude, it.longitude))
+                        .title("End")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                )
+            }
+
+            val polylineOptions = PolylineOptions().apply {
+                color(Color.BLUE)
+                width(20f)
+                startCap(RoundCap())
+                endCap(RoundCap())
+                jointType(JointType.ROUND)
+                addAll(locations)
+            }
+            map.addPolyline(polylineOptions)
+
         }
 
-        navFragment.getMapAsync { map ->
-            map?.addPolyline(polylineOptions)
-        }
+
     }
 
     fun moveCamera(latLng: LatLng, zoom: Float) {
@@ -83,7 +116,7 @@ class MapManager(
     }
 
     fun clearMap() {
-        mGoogleMap?.run {
+        googleMap?.run {
             uiSettings.isZoomControlsEnabled = true
             uiSettings.isMyLocationButtonEnabled = true
             clear()
@@ -92,6 +125,23 @@ class MapManager(
     }
 
     fun setNavigationUiEnabled(enabled: Boolean) {
-        navFragment.isNavigationUiEnabled = false
+        navFragment.isNavigationUiEnabled = enabled
+    }
+
+
+    fun makeAllTrajectoriesVisibleOnTheMap(path: List<LatLng>?) {
+        if (path.isNullOrEmpty()) {
+            return
+        }
+        googleMap?.let { map ->
+            val boundsBuilder = LatLngBounds.Builder()
+            path.forEach {
+                boundsBuilder.include(it)
+            }
+            val bounds = boundsBuilder.build()
+            val cameraUpdate = CameraUpdateFactory.newLatLngBounds(bounds, 100)
+            map.moveCamera(cameraUpdate)
+        }
+
     }
 }
