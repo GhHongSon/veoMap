@@ -53,21 +53,6 @@ An Android navigation solution implementing Google Maps functionality including 
 
 ### 4. Code Snippets
 
-- Add destination markers to the map
-  ```kotlin
-   fun addDestinationMark() {
-        destinationLatLng?.let {
-            destinationMarker?.remove()
-            destinationMarker = googleMap?.addMarker(
-                MarkerOptions()
-                    .position(it)
-                    .title("Destination")
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-            )
-         }
-     }
-
-  ```
 - Obtain user device location information
    ```kotlin
    fun getDeviceLastLocation() {
@@ -89,6 +74,23 @@ An Android navigation solution implementing Google Maps functionality including 
             listener.onDeviceLastLocation(null)
         }
     }
+  ```
+
+
+- Add destination marker to the map
+  ```kotlin
+   fun addDestinationMark() {
+        destinationLatLng?.let {
+            destinationMarker?.remove()
+            destinationMarker = googleMap?.addMarker(
+                MarkerOptions()
+                    .position(it)
+                    .title("Destination")
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+            )
+         }
+     }
+
   ```
 
 - Navigation to destination
